@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="ko">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#fdf7e7"><meta name="description" content="선생님의 교육 도구를 한곳에. 선택과목 모둠 자리배치와 나만의 앱 허브."><title>수업의 서랍 · 교육 도구 허브</title><link rel="stylesheet" href="styles.css"></head>
+<body>
+<div class="top-strip">작은 도구가 모여, 더 좋은 수업이 됩니다.</div>
+<header class="site-header"><a href="#hub" data-action="hub" class="brand"><span class="brand-mark" aria-hidden="true">✳</span><span>수업의 서랍<small>CLASSROOM STUDIO</small></span></a><nav aria-label="주 메뉴"><button data-action="hub" class="nav-link">나의 도구함</button><button data-action="seating" class="nav-link">모둠 자리배치</button><span class="local-badge">내 브라우저의 작업실</span></nav></header>
+<main id="main"></main>
+<footer class="site-footer"><span>수업의 서랍 <b>✳</b></span><span>선생님의 아이디어에, 제자리를.</span><span>MADE FOR YOUR CLASSROOM</span></footer>
+<div id="status" class="toast" role="status" aria-live="polite"></div>
+<dialog id="dialog"><div class="dialog-head"><span class="eyebrow" id="dialog-label">YOUR CLASSROOM</span><button class="icon-button" data-action="dialog-close" aria-label="대화상자 닫기">×</button></div><div id="dialog-content"></div></dialog>
+<input type="file" id="file-input" accept=".json,application/json" hidden>
+<script type="module" src="app.js"></script>
+</body></html>
