@@ -1,0 +1,18 @@
+const $=s=>document.querySelector(s),form=$('#editor');
+let entries=[],current=null,dirty=false,busy=false;
+const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;};
+const message=s=>$('#status').textContent=s;
+async function api(method='GET',data){const response=await fetch('/api/diary',{method,headers:method==='GET'?{}:{'Content-Type':'application/json'},body:data?JSON.stringify(data):undefined});const result=await response.json();if(!response.ok)throw new Error(result.error);return result;}
+function renderList(){const q=$('#search').value.toLowerCase(),month=$('#month').value;$('#count').textContent=entries.length;const filtered=entries.filter(e=>(!month||e.date.startsWith(month))&&`${e.title} ${e.body}`.toLowerCase().includes(q));$('#list').replaceChildren();for(const e of filtered){const button=document.createElement('button');button.className='entry'+(e.date===current?.date?' active':'');const date=document.createElement('small'),title=document.createElement('b'),excerpt=document.createElement('p');date.textContent=e.date;title.textContent=e.title||'제목 없는 하루';excerpt.textContent=e.body.slice(0,80);button.append(date,title,excerpt);button.onclick=()=>{if(canLeave())open(e);};$('#list').append(button);}if(!filtered.length){const p=document.createElement('p');p.textContent=entries.length?'검색 결과가 없어요.':'아직 기록이 없어요. 첫 이야기를 남겨보세요.';$('#list').append(p);}}
+function canLeave(){return !busy&&(!dirty||confirm('저장하지 않은 내용이 있어요. 이동하면 사라집니다. 이동할까요?'));}
+function open(entry=null,date=today()){current=entry;$('#date').value=entry?.date||date;$('#date').readOnly=!!entry;$('#title').value=entry?.title||'';$('#body').value=entry?.body||'';$('#mood').value=entry?.mood||'calm';$('#delete').hidden=!entry;$('#saved').textContent=entry?'저장됨 · '+new Date(entry.updated).toLocaleString('ko-KR'):'새로운 이야기';dirty=false;message('');count();renderList();}
+function count(){$('#length').textContent=Array.from($('#body').value).length.toLocaleString()+'자';}
+function lock(value){busy=value;form.querySelectorAll('input,select,textarea,button').forEach(el=>el.disabled=value);$('#new').disabled=value;}
+form.addEventListener('input',()=>{dirty=true;$('#saved').textContent='저장하지 않은 변경';count();});
+$('#date').addEventListener('change',()=>{const e=entries.find(e=>e.date===$('#date').value);if(e){if(canLeave())open(e);else $('#date').value=current?.date||today();}});
+$('#search').oninput=renderList;$('#month').oninput=renderList;$('#reset').onclick=()=>{$('#search').value='';$('#month').value='';renderList();};
+$('#new').onclick=()=>{if(canLeave())open(entries.find(e=>e.date===today()));};
+form.onsubmit=async event=>{event.preventDefault();if(busy)return;lock(true);try{const {entry}=await api('PUT',{date:$('#date').value,title:$('#title').value,body:$('#body').value,mood:$('#mood').value,revision:current?.revision||0});entries=entries.filter(e=>e.date!==entry.date).concat(entry).sort((a,b)=>b.date.localeCompare(a.date));open(entry);message('로컬 데이터베이스에 저장했어요.');}catch(e){message(e.message);}finally{lock(false);}};
+$('#delete').onclick=async()=>{if(!current||busy||!confirm('이 날짜의 일기를 삭제할까요? 삭제하면 되돌릴 수 없어요.'))return;lock(true);try{await api('DELETE',{date:current.date,revision:current.revision});entries=entries.filter(e=>e.date!==current.date);open();message('일기를 삭제했어요.');}catch(e){message(e.message);}finally{lock(false);}};
+window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue='';}});
+lock(true);api().then(data=>{entries=data.entries;open(entries.find(e=>e.date===today()));}).catch(()=>message('일기를 불러오지 못했어요. 서버를 다시 실행하고 새로고침해 주세요.')).finally(()=>lock(false));
